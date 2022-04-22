@@ -1,3 +1,8 @@
+## Install
+```bash
+pip install -r requirements.txt
+```
+
 ## Usage
 ```bash
 # use bash make environment (LINUX/OSX only):

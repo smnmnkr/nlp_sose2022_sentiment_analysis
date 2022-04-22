@@ -8,12 +8,12 @@ class Main:
     #
     #
     #  -------- __call__ -----------
-    def __call__(self):
+    def __call__(self, config: dict) -> None:
 
         # load data from csv files
         self.data: dict = {
-            'train': pd.read_csv("../data/train.csv", sep=','),
-            'eval': pd.read_csv("../data/eval.csv", sep=','),
+            'train': pd.read_csv(config['data']['train_path'], sep=','),
+            'eval': pd.read_csv(config['data']['eval_path'], sep=','),
         }
 
         # prepare train, eval data frame
@@ -22,34 +22,37 @@ class Main:
 
         # load different classifier types
         self.classifier: dict = {
-            'base': Classifier(),
-            'generic_stop_words': Classifier("../data/stop_words.csv"),
-            'customized_stop_words': Classifier("../data/stop_words_mod.csv"),
+            label: Classifier(**cfg)
+            for label, cfg in config['classifier'].items()
         }
 
         # iterate over each classifier
-        for lbl_clsf, clsf in self.classifier.items():
+        for classifier_label, classifier in self.classifier.items():
 
             # fit to train data
-            clsf.fit(self.data['train'])
+            classifier.fit(self.data['train'])
 
             # predict train and eval set
             prediction: dict = {
-                'train': clsf.predict(self.data['train']),
-                'eval': clsf.predict(self.data['eval']),
+                'train': classifier.predict(self.data['train']),
+                'eval': classifier.predict(self.data['eval']),
             }
 
             # print results to console
-            for lbl_data, data in prediction.items():
-                valid: int = sum(data['prediction'] == data['gold'])
-                print(f'CLASSIFIER: {lbl_clsf}, ACC({lbl_data})={valid / len(data)}')
+            for data_label, data in prediction.items():
+                # count valid predictions, print to console
+                valid: int = sum(pd.Series(data['prediction'] == data['gold']))
+                print(f'CLASSIFIER: {classifier_label:24}\t ACC({data_label})\t= {valid / len(data):.4f}')
+
+            print()
 
     #
     #
     #  -------- _prepare_dfs -----------
     # (all inplace)
     @staticmethod
-    def _prepare_df(data) -> None:
+    def _prepare_df(data: pd.DataFrame) -> None:
+
         # drop unnecessary columns
         data.drop(['id', 'time', 'lang', 'smth'], axis=1, inplace=True, errors='ignore')
 
@@ -64,4 +67,25 @@ class Main:
 
 
 if __name__ == "__main__":
-    Main()()
+    CONFIG: dict = {
+        'data': {
+            'train_path': './data/train.csv',
+            'eval_path': './data/eval.csv',
+        },
+        'classifier': {
+            'base': {},
+            'stopwords': {
+                'stop_words_path': './data/stop_words.csv',
+            },
+            'stopwords+onlyCommon1000': {
+                'stop_words_path': './data/stop_words.csv',
+                'use_most_common': 1000,
+            },
+            'stopwords+sharedRemoved': {
+                'stop_words_path': './data/stop_words.csv',
+                'remove_shared': True,
+            }
+        }
+    }
+
+    Main()(CONFIG)

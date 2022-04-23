@@ -22,4 +22,9 @@ CLASSIFIER: stopwords+onlyCommon1000	 ACC(eval)	= 0.6460
 
 CLASSIFIER: stopwords+sharedRemoved 	 ACC(train)	= 0.9308
 CLASSIFIER: stopwords+sharedRemoved 	 ACC(eval)	= 0.5156
+
+#
+####  see NLP-WiSe2021 challenge baseline (Werner):
+CLASSIFIER: logisticRegression         ACC(train)	= 0.????
+CLASSIFIER: logisticRegression         ACC(eval)	= 0.6756
 ```
